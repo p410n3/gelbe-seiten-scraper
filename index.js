@@ -21,33 +21,39 @@ if(!args[0]) {
 } 
 
 // Calling most of the stuff here
-getLinksOfBusinesses(args[0]).then(arrLinks => {
-    fs.writeFile(args[0] + '.json', JSON.stringify(arrLinks), () => {
-        lg('File written');
+if(fs.existsSync('./' + args[0] + '.json')) {
+    lg('List of Businesses found on Disk. Skipping download.');
+} else {
+    lg('Downloading list of Businesses...');
+    getLinksOfBusinesses(args[0]).then(arrLinks => {
+        fs.writeFile(args[0] + '.json', JSON.stringify(arrLinks), () => {
+            lg('File written');
+        });
     });
-});
+}
 
 // Functions go down here
 function getLinksOfBusinesses(nameOfCity) {
+    let arrLinks = [];
+
     return new Promise(resolve => {
         helper.getCityLink(nameOfCity).then(link => {
             return gelbeSeitenUrl + link + '/unternehmen/';  
         }).then(url => {
-            [...alphabet].map(c => {
-                axios.get(url + c + '?page=1').then(res => {
+            Promise.all([...alphabet].map(c => {
+                return axios.get(url + c + '?page=1');
+            })).then(array => {
+                array.map(res => {
                     let $ = cheerio.load(res.data);
                     let links = $('a.link');
-
-                    let arrLinks = [];
 
                     for(let i = 0; i < links.length; i++) {
                         arrLinks.push(links[0].attribs.href);
                     } 
 
                     resolve(arrLinks);
-                }).catch(e => {});
-            });
+                });
+            })
         });
     })
 }
-
