@@ -21,8 +21,10 @@ if(!args[0]) {
 } 
 
 // Calling most of the stuff here
+
+// First we get all the Links to all the Businesses. When that is done we store the list in a JSON in ./cache
 if(fs.existsSync('./cache/' + args[0] + '.json')) {
-    lg('List of Businesses found on Disk. Skipping download.');
+    lg('List of Businesses found on Disk. Delete manually to force a Re-download.');
 } else {
     lg('Downloading list of Businesses...');
     getLinksOfBusinesses(args[0]).then(arrLinks => {
@@ -31,6 +33,25 @@ if(fs.existsSync('./cache/' + args[0] + '.json')) {
         });
     });
 }
+
+// Now that this is done we create a folder and download all the Pages in there too. The actual data extraction gets don AFTER that.
+if(fs.existsSync('./cache/' + args[0])){
+    lg('Cache already written for that City. Delete manually to force a Re-download.');
+} else {
+    fs.mkdirSync('./cache/' + args[0]);
+
+    // Read the list of Links from the Cache folder into an array
+    let links = JSON.parse(fs.readFileSync('./cache/' + args[0] + '.json', 'utf8'));
+
+    links.map(link => {
+        axios.get(link)
+            .then(res => {
+                // TODO file cant be wrotten because of slasghes in the file name FIX THAT
+                fs.writeFileSync('./cache/' + args[0] + '/' + link + '.json', res.data);
+            });
+    });
+}
+
 
 // Functions go down here
 function getLinksOfBusinesses(nameOfCity) {
