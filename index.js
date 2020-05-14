@@ -21,12 +21,12 @@ if(!args[0]) {
 } 
 
 // Calling most of the stuff here
-if(fs.existsSync('./' + args[0] + '.json')) {
+if(fs.existsSync('./cache/' + args[0] + '.json')) {
     lg('List of Businesses found on Disk. Skipping download.');
 } else {
     lg('Downloading list of Businesses...');
     getLinksOfBusinesses(args[0]).then(arrLinks => {
-        fs.writeFile(args[0] + '.json', JSON.stringify(arrLinks), () => {
+        fs.writeFile('./cache/' + args[0] + '.json', JSON.stringify(arrLinks), () => {
             lg('File written');
         });
     });
